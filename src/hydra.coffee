@@ -23,6 +23,8 @@ class Hydra
 				Hydra[constant] = window.WebCLComputeContext[constant]
 			}
 		}`
+		
+		Hydra.DEVICE_TYPE_ALL = 0x0F # TODO: Hack in my version of the prototype
 	else if @provider == Nokia
 		`for (constant in window.WebCL) {
 			if (constant.substring(0, 3) == "CL_") {
@@ -45,13 +47,26 @@ class Hydra
 
 class Platform
 	constructor: (platform) ->
-		@platform = platform
+		@id = platform
 	
 	getPlatformInfo: (info) ->
-		@platform.getPlatformInfo(info)
+		@id.getPlatformInfo(info)
 	
 	getDeviceIDs: (type) ->
-		@platform.getDeviceIDs(type)
+		result = []; devices = @id.getDeviceIDs(type)
+			
+		for i in [0 ... devices.length]
+			result[i] = new Device(devices[i])
+			
+		return result
+	
+
+class Device
+	constructor: (device) ->
+		@id = device
+	
+	getDeviceInfo: (info) ->
+		@id.getDeviceInfo(info)
 	
 
 this.Hydra = Hydra
