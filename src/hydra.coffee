@@ -28,7 +28,7 @@ class Hydra
 	else if @provider == Nokia
 		`for (constant in window.WebCL) {
 			if (constant.substring(0, 3) == "CL_") {
-				Hydra[constant.substring(3)] = window.WebCLComputeContext[constant]
+				Hydra[constant.substring(3)] = window.WebCL[constant]
 			}
 		}`
 	
