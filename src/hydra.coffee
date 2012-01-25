@@ -1,31 +1,57 @@
-nokia = 'Nokia'
-samsung = 'Samsung'
+Nokia = 'Nokia'
+Samsung = 'Samsung'
 
 if window.WebCL
-	context = window.WebCL
+	Context = window.WebCL
 	
-	webcl = nokia
+	WebCL = Nokia
 else if window.WebCLComputeContext
-	context = new window.WebCLComputeContext()
+	Context = new window.WebCLComputeContext()
 	
-	webcl = samsung
+	WebCL = Samsung
 else
-	webcl = null
+	WebCL = null
 
 class Hydra
-	@provider = webcl
-	@supported = (webcl != null)
+	@provider = WebCL
+	@supported = (WebCL != null)
 	
-	if @provider == samsung
-		for constant in window.WebCLComputeContext
-			# TODO: Proper blacklist / whitelist
-			this[constant] = window.WebCLComputeContext[constant] if constant != 'property'
+	# WTF Coffee, I just want a simple loop. I know it is not uber-fast.
+	if @provider == Samsung
+		`for (constant in window.WebCLComputeContext) {
+			if (constant != 'property') {
+				Hydra[constant] = window.WebCLComputeContext[constant]
+			}
+		}`
+	else if @provider == Nokia
+		`for (constant in window.WebCL) {
+			if (constant.substring(0, 3) == "CL_") {
+				Hydra[constant.substring(3)] = window.WebCLComputeContext[constant]
+			}
+		}`
+	
+	if Context != null 
+		@getPlatformIDs = () ->
+			result = []; platforms = Context.getPlatformIDs()
+			
+			for i in [0 ... platforms.length]
+				result[i] = new Platform(platforms[i])
+			
+			return result
 		
-	else if @provider == nokia
-		for constant in window.WebCL
-			# TODO: Proper blacklist / whitelist
-			this[constant[3 .. -1]] = window.WebCL[constant] if constant[0 .. 2] == 'CL_'
-		
+	else
+		@getPlatformIDs = () -> return []
+	
+
+class Platform
+	constructor: (platform) ->
+		@platform = platform
+	
+	getPlatformInfo: (info) ->
+		@platform.getPlatformInfo(info)
+	
+	getDeviceIDs: (type) ->
+		@platform.getDeviceIDs(type)
 	
 
 this.Hydra = Hydra
