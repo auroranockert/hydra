@@ -114,10 +114,17 @@ class Context
 	createBuffer: (flags, size) ->
 		return new Buffer(@id.createBuffer(flags, size, null))
 	
+	createProgramWithSource: (source) ->
+		return new Program(@id.createProgramWithSource(source))
 
 class Buffer
 	constructor: (buffer) ->
 		@id = buffer
+	
+
+class Program
+	constructor: (program) ->
+		@id = program
 	
 
 this.Hydra = Hydra
