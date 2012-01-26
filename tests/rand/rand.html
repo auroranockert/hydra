@@ -1,0 +1,122 @@
+<html>
+	<head>
+		<title>A simple parallel random number generator</title>
+	
+		<script id="clRand" type="text/x-opencl">
+			__kernel void kRand(global uint * rand){
+				int x = get_global_id(0);
+				rand[x] = 1664525u * rand[x] + 1013904223u;
+			}
+		</script>
+	
+		<script src="../../lib/hydra.js"></script>
+	
+		<script type="text/javascript">
+		function loadKernel(id) {
+			var shaderScript = document.getElementById(id)
+			var str = ""
+			var k = shaderScript.firstChild
+			
+			while (k) {
+				if (k.nodeType == 3) {
+					str += k.textContent
+				}
+				
+				k = k.nextSibling
+			}
+			
+			return str
+		}
+		
+		function CL_rand () {
+			var output = document.getElementById("output")
+			
+			output.innerHTML = ""
+			
+			try {
+				if (!window.Hydra.supported) {
+					alert("Unfortunately your system does not support WebCL")
+					
+					return false
+				}
+				
+				var n = 4
+				
+				var UIrand = new Uint32Array(n)
+				var Irand = new Int32Array(UIrand) // Samsung-Hack
+				
+				for ( var i = 0; i < n;  i++) {
+					UIrand[i] = Math.floor(Math.random() * 4294967295)
+				}
+				
+				var platform = Hydra.getPlatformIDs()[0]
+				var devices = platform.getDeviceIDs(Hydra.DEVICE_TYPE_DEFAULT)
+				
+				var ctx = Hydra.createContext(platform, devices)
+				
+				var kernelSrc = loadKernel("clRand")
+				var program = ctx.createProgramWithSource(kernelSrc)
+				
+				var cmdQueue = ctx.createCommandQueue(devices[0], 0)
+				
+				try {
+					program.buildProgram(devices)
+				} catch(e) {
+					debugger
+					
+					alert ("Failed to build WebCL program. Error " + program.getProgramBuildInfo (devices[0], WebCL.CL_PROGRAM_BUILD_STATUS) + ":  " + program.getProgramBuildInfo (devices[0], WebCL.CL_PROGRAM_BUILD_LOG))
+					throw e;
+				}
+				
+				var kernel = program.createKernel("kRand")
+				var bufSize = n * 4
+				
+				var bufRand = ctx.createBuffer(Hydra.MEM_READ_WRITE, bufSize)
+				
+				kernel.setKernelArgGlobal(0, bufRand)
+				
+				cmdQueue.enqueueWriteBuffer(bufRand, true, 0, bufSize, Irand)
+				
+				cmdQueue.enqueueNDRangeKernel(kernel, [n], [n])
+				
+				cmdQueue.enqueueReadBuffer(bufRand, true, 0, bufSize, Irand)
+					
+				output.innerHTML += "<br>Result = "
+				for (var i = 0; i < n; i = i + 1)
+					output.innerHTML += UIrand[i] + ", "
+				
+			} catch(e) {
+				document.getElementById("output").innerHTML 
+				+= "<h3>ERROR:</h3><pre style=\"color:red;\">" + e.message + "</pre>";
+				throw e;
+			}
+		}
+		</script> 
+	</head>
+	
+	<body>
+		<h1>A simple parallel random number generator</h1>
+		
+		<p>
+			Shamelessly borrowed from, <a href="http://www.ibiblio.org/e-notes/webcl/rand.html">http://www.ibiblio.org/e-notes/webcl/rand.html</a>
+		</p>
+		
+		<p>
+			<button onclick="CL_rand()">run</button>
+			<br>Press the button to get random vectors in parallel.
+		</p>
+		
+		<p id="output">
+			
+		</p>
+		
+		<p>The linear congruential random number generator kernel
+			<pre>
+__kernel void kRand(global uint* rand ){
+	int x = get_global_id(0);
+	rand[x] = 1664525u*rand[x] + 1013904223u;
+}
+			</pre>
+		</p>
+	</body>
+</html>
