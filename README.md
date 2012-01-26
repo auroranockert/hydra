@@ -18,7 +18,7 @@ Feel free to help, pull requests are appreciated. But if you're working on somet
 Currently working
 --------------------------------------------------------------------------------
 
-Interacting with Devices, Platforms
+Interacting with Devices, Platforms, running Kernels, basic Buffer interaction.
 
 
 Building
