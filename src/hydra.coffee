@@ -40,7 +40,7 @@ class Hydra
 	else
 		@getPlatformIDs = () -> return []
 	
-	@createContext = (devices) ->
+	@createContext = (platform, devices) ->
 		switch Hydra.provider
 			when Samsung
 				if devices.length == 1 && devices[0].index == 0
@@ -48,7 +48,7 @@ class Hydra
 				else
 					throw "Not implemented yet"
 			when Nokia
-				throw "Not implemented yet"
+				return new Context(CL.createContext([WebCL.CL_CONTEXT_PLATFORM, platform.id], device.id for device in devices))
 			
 		
 	
@@ -111,11 +111,46 @@ class Context
 			return results
 		
 	
+	createCommandQueue: (device, properties) ->
+		return new CommandQueue(@id.createCommandQueue(device.id, properties))
+	
 	createBuffer: (flags, size) ->
 		return new Buffer(@id.createBuffer(flags, size, null))
 	
 	createProgramWithSource: (source) ->
 		return new Program(@id.createProgramWithSource(source))
+	
+
+class CommandQueue
+	constructor: (queue) ->
+		@id = queue
+	
+	enqueueWriteBuffer: (buffer, blocking, offset, size, hostPtr) ->
+		switch Hydra.provider
+			when Samsung
+				@id.enqueueWriteBuffer(buffer.id, blocking, offset, size, hostPtr, 0)
+			when Nokia
+				@id.enqueueWriteBuffer(buffer.id, blocking, offset, size, hostPtr, [])
+			
+		
+	
+	enqueueReadBuffer: (buffer, blocking, offset, size, hostPtr) ->
+		switch Hydra.provider
+			when Samsung
+				@id.enqueueReadBuffer(buffer.id, blocking, offset, size, hostPtr, 0)
+			when Nokia
+				@id.enqueueReadBuffer(buffer.id, blocking, offset, size, hostPtr, [])
+			
+		
+	
+	enqueueNDRangeKernel: (kernel, globalWorkSize, localWorkSize) ->
+		switch Hydra.provider
+			when Samsung
+				@id.enqueueNDRangeKernel(kernel.id, globalWorkSize.length, null, new Int32Array(globalWorkSize), new Int32Array(localWorkSize), 0)
+			when Nokia
+				@id.enqueueNDRangeKernel(kernel.id, globalWorkSize.length, [], globalWorkSize, localWorkSize, [])
+			
+		
 	
 
 class Buffer
@@ -127,12 +162,12 @@ class Program
 	constructor: (program) ->
 		@id = program
 	
-	buildProgram: () ->
+	buildProgram: (devices) ->
 		switch Hydra.provider
 			when Samsung
 				@id.buildProgram(null, null, null)
 			when Nokia
-				throw "Not implemented yet"
+				@id.buildProgram(device.id for device in devices, "")
 			
 		
 	
@@ -145,20 +180,14 @@ class Kernel
 		@id = kernel
 	
 	setKernelArg: (i, value, type) ->
-		switch Hydra.provider
-			when Samsung
-				@id.setKernelArg(i, value, type)
-			when Nokia
-				throw "Not implemented yet"
-			
-		
+		@id.setKernelArg(i, value, type)
 	
 	setKernelArgGlobal: (i, value) ->
 		switch Hydra.provider
 			when Samsung
-				@id.setKernelArgGlobal(i, value)
+				@id.setKernelArgGlobal(i, value.id)
 			when Nokia
-				throw "Not implemented yet"
+				@id.setKernelArg(i, value.id)
 			
 		
 	
