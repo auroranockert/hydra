@@ -136,5 +136,31 @@ class Program
 			
 		
 	
+	createKernel: (name) ->
+		return new Kernel(@id.createKernel(name))
+	
+
+class Kernel
+	constructor: (kernel) ->
+		@id = kernel
+	
+	setKernelArg: (i, value, type) ->
+		switch Hydra.provider
+			when Samsung
+				@id.setKernelArg(i, value, type)
+			when Nokia
+				throw "Not implemented yet"
+			
+		
+	
+	setKernelArgGlobal: (i, value) ->
+		switch Hydra.provider
+			when Samsung
+				@id.setKernelArgGlobal(i, value)
+			when Nokia
+				throw "Not implemented yet"
+			
+		
+	
 
 this.Hydra = Hydra
