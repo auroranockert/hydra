@@ -111,5 +111,13 @@ class Context
 			return results
 		
 	
+	createBuffer: (flags, size) ->
+		return new Buffer(@id.createBuffer(flags, size, null))
+	
+
+class Buffer
+	constructor: (buffer) ->
+		@id = buffer
+	
 
 this.Hydra = Hydra
