@@ -2,19 +2,18 @@ Nokia = 'Nokia'
 Samsung = 'Samsung'
 
 if window.WebCL
-	Context = window.WebCL
+	CL = window.WebCL
 	
-	WebCL = Nokia
+	Provider = Nokia
 else if window.WebCLComputeContext
-	Context = new window.WebCLComputeContext()
+	CL = new window.WebCLComputeContext()
 	
-	WebCL = Samsung
+	Provider = Samsung
 else
-	WebCL = null
+	Provider = null
 
 class Hydra
-	@provider = WebCL
-	@supported = (WebCL != null)
+	@provider = Provider; @supported = (Provider != null)
 	
 	if @provider == Samsung
 		for constant of window.WebCLComputeContext
@@ -29,22 +28,34 @@ class Hydra
 			
 		
 	
-	if Context != null 
+	if CL != null 
 		@getPlatformIDs = () ->
-			result = []; platforms = Context.getPlatformIDs()
+			result = []; platforms = CL.getPlatformIDs()
 			
 			for i in [0 ... platforms.length]
-				result[i] = new Platform(platforms[i])
+				result[i] = new Platform(platforms, i)
 			
 			return result
 		
 	else
 		@getPlatformIDs = () -> return []
 	
+	@createContext = (devices) ->
+		switch Hydra.provider
+			when Samsung
+				if devices.length == 1 && devices[0].index == 0
+					return new Context(CL.createContext(null, devices[0].devices, null, null))
+				else
+					throw "Not implemented yet"
+			when Nokia
+				throw "Not implemented yet"
+			
+		
+	
 
 class Platform
-	constructor: (platform) ->
-		@id = platform
+	constructor: (@platforms, @index) ->
+		@id = @platforms[@index]
 	
 	getPlatformInfo: (info) ->
 		@id.getPlatformInfo(info)
@@ -70,17 +81,35 @@ class Platform
 		devices = @id.getDeviceIDs(type)
 			
 		for i in [0 ... devices.length]
-			result[i] = new Device(devices[i])
+			result[i] = new Device(devices, i)
 		
 		return result
 	
 
 class Device
-	constructor: (device) ->
-		@id = device
+	constructor: (@devices, @index) ->
+		@id = @devices[@index]
 	
 	getDeviceInfo: (info) ->
-		@id.getDeviceInfo(info)
+		return @id.getDeviceInfo(info)
+	
+
+class Context
+	constructor: (context) ->
+		@id = context
+	
+	getContextInfo: (info) ->
+		results = @id.getContextInfo(info)
+		
+		if info == Hydra.CONTEXT_DEVICES
+			devices = []
+			
+			devices[i] = new Device(result) for result, i in results
+			
+			return devices
+		else
+			return results
+		
 	
 
 this.Hydra = Hydra
