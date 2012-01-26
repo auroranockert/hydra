@@ -116,6 +116,7 @@ class Context
 	
 	createProgramWithSource: (source) ->
 		return new Program(@id.createProgramWithSource(source))
+	
 
 class Buffer
 	constructor: (buffer) ->
@@ -125,6 +126,15 @@ class Buffer
 class Program
 	constructor: (program) ->
 		@id = program
+	
+	buildProgram: () ->
+		switch Hydra.provider
+			when Samsung
+				@id.buildProgram(null, null, null)
+			when Nokia
+				throw "Not implemented yet"
+			
+		
 	
 
 this.Hydra = Hydra
