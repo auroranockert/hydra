@@ -30,6 +30,8 @@ class Hydra
 	
 	if CL != null 
 		@getPlatformIDs = () ->
+			return [] unless @provider
+			
 			result = []; platforms = CL.getPlatformIDs()
 			
 			for i in [0 ... platforms.length]
