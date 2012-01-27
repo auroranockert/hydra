@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>WebCL Information</title>
+</head>
+<body>
+	<script src="../../lib/hydra.js"></script>
+	
+	<p id="output">
+		
+	</p>
+	
+	<script>
+	function f() {
+		if (!Hydra.supported) {
+			return document.getElementById("output").innerHTML = "WebCL supported: No"
+		}
+		
+		var s = "WebCL supported: Yes (" + Hydra.provider + ")<br><br>"
+		
+		// List of OpenCL information parameter names.
+		var infos = [
+		[ "Device Profile", Hydra.DEVICE_PROFILE ],
+		[ "Device Type", Hydra.DEVICE_TYPE ],
+		[ "Device Vendor", Hydra.DEVICE_VENDOR ],
+		[ "Device Version", Hydra.DEVICE_VERSION ],
+		[ "Driver Version", Hydra.DRIVER_VERSION ],
+		[ "Address Bits", Hydra.DEVICE_ADDRESS_BITS ],
+		[ "Available", Hydra.DEVICE_AVAILABLE ],
+		[ "Compiler Available", Hydra.DEVICE_COMPILER_AVAILABLE ],
+		[ "Little Endian", Hydra.DEVICE_ENDIAN_LITTLE ],
+		[ "ECC Support", Hydra.DEVICE_ERROR_CORRECTION_SUPPORT ],
+		[ "Extensions", Hydra.DEVICE_EXTENSIONS ],
+		[ "Global Memory (Bytes)", Hydra.DEVICE_GLOBAL_MEM_SIZE ],
+		[ "Local Memory (Bytes)", Hydra.DEVICE_LOCAL_MEM_SIZE ],
+		[ "Image Support", Hydra.DEVICE_IMAGE_SUPPORT ],
+		[ "Clock Frequency (MHz)", Hydra.DEVICE_MAX_CLOCK_FREQUENCY ],
+		[ "Max Compute Units", Hydra.DEVICE_MAX_COMPUTE_UNITS ],
+		[ "Max Work Group Size", Hydra.DEVICE_MAX_WORK_GROUP_SIZE ],
+		[ "Max Work Item Dimensions", Hydra.DEVICE_MAX_WORK_ITEM_DIMENSIONS ],
+		[ "Max Work Item Sizes", Hydra.DEVICE_MAX_WORK_ITEM_SIZES ]
+		]
+		
+		var platforms = Hydra.getPlatformIDs()
+				
+		s += "Found " + platforms.length + " platform(s).<br><br>"
+		
+		for (var i = 0; i < platforms.length; i++) {
+			var platform = platforms[i]
+			
+			var name = platform.getPlatformInfo(Hydra.PLATFORM_NAME)
+			var vendor = platform.getPlatformInfo(Hydra.PLATFORM_VENDOR)
+			var version = platform.getPlatformInfo(Hydra.PLATFORM_VERSION)
+			var profile = platform.getPlatformInfo(Hydra.PLATFORM_PROFILE)
+			var extensions = platform.getPlatformInfo(Hydra.PLATFORM_EXTENSIONS)
+			
+			var devices = platform.getDeviceIDs(Hydra.DEVICE_TYPE_ALL)
+			
+			s += "[" + i + "] \"<b>" + name + "</b>\"<br>"
+			s += "<div style='padding-left:2em;'>"
+			s += "<b>vendor:</b> " + vendor + "<br>"
+			s += "<b>version:</b> "  + version + "<br>"
+			s += "<b>profile:</b> " + profile + "<br>"
+			s += "<b>extensions:</b> " + extensions + "<br>";
+			s += "<b>Devices:</b> " + devices.length + "<br>"
+					
+			for (var j = 0; j < devices.length; j++) {
+				var device = devices[j]
+				
+				var device_name = device.getDeviceInfo(Hydra.DEVICE_NAME)
+					
+				s += "[" + j + "] \"<b>" + device_name + "</b>\"<br>"
+				s += "<div style='padding-left:2em;'>"
+				
+				for (var k in infos) {
+					s += infos[k][0] + ": "
+					try {
+						s += "<b>" + device.getDeviceInfo(infos[k][1]) + "</b>"
+					} catch (e) {
+						s += "<b>Info not available</b>"
+					}
+					s += "<br>"
+				}
+						
+				s += "</div>"
+			}
+			
+			s += "</div>"
+			
+		}
+		
+		var output = document.getElementById ("output")
+		output.innerHTML = s + "<br>"
+	}
+	
+	f()
+    </script>
+	
+	<p>
+		Shamelessly borrowed from, <a href="http://www.ibiblio.org/e-notes/webcl/webcl_test.html">http://www.ibiblio.org/e-notes/webcl/webcl_test.html</a>
+	</p>
+</body>
+</html>
