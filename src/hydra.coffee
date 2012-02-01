@@ -3,7 +3,7 @@ Samsung = 'Samsung'
 Mozilla = 'Mozilla'
 
 if window.WebCL
-	if CL.getPlatformIDs
+	if window.WebCL.getPlatformIDs
 		Provider = Nokia
 		
 		CL = window.WebCL
@@ -122,7 +122,7 @@ class Context
 		
 	
 	createCommandQueue: (device, properties) ->
-		return new CommandQueue(@id.createCommandQueue(device.id, properties))
+		return new CommandQueue(@id.createCommandQueue(device.id, properties), this)
 	
 	createBuffer: (flags, size) ->
 		return new Buffer(@id.createBuffer(flags, size, null))
@@ -132,7 +132,7 @@ class Context
 	
 
 class CommandQueue
-	constructor: (queue) ->
+	constructor: (queue, @context) ->
 		@id = queue
 	
 	enqueueWriteBuffer: (buffer, blocking, offset, size, hostPtr) ->
@@ -159,6 +159,18 @@ class CommandQueue
 				@id.enqueueNDRangeKernel(kernel.id, globalWorkSize.length, null, new Int32Array(globalWorkSize), new Int32Array(localWorkSize), 0)
 			when Nokia
 				@id.enqueueNDRangeKernel(kernel.id, globalWorkSize.length, [], globalWorkSize, localWorkSize, [])
+			
+		
+	
+	finish: () ->
+		switch Hydra.provider
+			when Samsung
+				@synchronizeBuffer ?= @context.createBuffer(Hydra.MEM_READ_WRITE, 4).id
+				@synchronizeTarget ?= new Float32Array(1)
+				
+				@id.enqueueReadBuffer(@synchronizeBuffer, true, 0, 4, @synchronizeTarget, 0)
+			else
+				@id.finish()
 			
 		
 	
