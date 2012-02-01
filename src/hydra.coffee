@@ -1,10 +1,17 @@
 Nokia = 'Nokia'
 Samsung = 'Samsung'
+Mozilla = 'Mozilla'
 
 if window.WebCL
-	CL = window.WebCL
+	if CL.getPlatformIDs
+		Provider = Nokia
+		
+		CL = window.WebCL
+	else
+		Provider = Mozilla
+		
+		CL = null
 	
-	Provider = Nokia
 else if window.WebCLComputeContext
 	CL = new window.WebCLComputeContext()
 	
@@ -28,19 +35,20 @@ class Hydra
 			
 		
 	
-	if CL != null 
-		@getPlatformIDs = () ->
-			return [] unless @provider
+	@getPlatformIDs = () ->
+		result = []
 			
-			result = []; platforms = CL.getPlatformIDs()
+		switch @provider
+			when Nokia, Samsung
+				platforms = CL.getPlatformIDs()
+			else
+				platforms = []
 			
-			for i in [0 ... platforms.length]
-				result[i] = new Platform(platforms, i)
-			
-			return result
 		
-	else
-		@getPlatformIDs = () -> return []
+		for i in [0 ... platforms.length]
+			result[i] = new Platform(platforms, i)
+			
+		return result
 	
 	@createContext = (platform, devices) ->
 		switch Hydra.provider
